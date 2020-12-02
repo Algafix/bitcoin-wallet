@@ -45,15 +45,15 @@ def hash_160_to_btc_address(h160, v):
 
      Possible values:
 
-        - 0 for main network (PUBKEY_HASH).
-        - 111 For testnet (TESTNET_PUBKEY_HASH).
+        - 0x00 for main network (PUBKEY_HASH).
+        - 0x6F For testnet (TESTNET_PUBKEY_HASH).
     :type v: int
     :return: The corresponding Bitcoin address.
     :rtype: hex str
     """
 
     # Add the network version leading the previously calculated RIPEMD-160 hash.
-    vh160 = chr(v) + h160
+    vh160 = v + h160
     # Double sha256.
     h = sha256(sha256(vh160).digest()).digest()
     # Add the two first bytes of the result as a checksum tailing the RIPEMD-160 hash.
@@ -98,8 +98,8 @@ def public_key_to_btc_address(pk, v='main'):
     :rtype: hex str
     """
 
-    PUBKEY_HASH = 0
-    TESTNET_PUBKEY_HASH = 111
+    PUBKEY_HASH = b"\x00"
+    TESTNET_PUBKEY_HASH = b"\x6F"
 
     # Choose the proper version depending on the provided 'v'.
     if v == 'main':

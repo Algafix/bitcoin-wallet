@@ -1,6 +1,6 @@
 import os
-from os import mkdir
 from os import path as ospath
+from pathlib import Path
 
 import sys
 from Transaction import TX
@@ -10,17 +10,18 @@ def init():
 
     sk, pk = aux.generate_keys()
 
-    bAddr = aux.generate_btc_addr(pk.to_der(), 'test')
+    bAddr = aux.generate_btc_addr(pk.to_der(), 'test').decode()
 
-    mkdir("wallet/" + bAddr)
+    Path("wallet").mkdir(exist_ok=True)
+    Path("wallet/"+bAddr).mkdir(exist_ok=False)
 
     with open("wallet/" + bAddr + '/pk.pem', 'w') as file:
-        file.write(pk.to_pem())
+        file.write(pk.to_pem().decode())
 
     with open("wallet/" + bAddr + '/sk.pem', 'w') as file:
-        file.write(sk.to_pem())
+        file.write(sk.to_pem().decode())
     
-    return (bAddr,aux.get_pub_key_hex("wallet/" + bAddr + "/pk.pem"))
+    return (bAddr, aux.get_pub_key_hex(pk.to_der()))
 
 if __name__ == "__main__":
 
@@ -34,7 +35,9 @@ if __name__ == "__main__":
 
     elif "init" in args:
         (addr,pubk) = init()
+        print("\n-----------------------------")
         print("Created Bitcoin address: " + addr)
-        print("\t With the public key: " + pubk)
+        print("With the public key: " + pubk)
+        print("-----------------------------\n")
     else:
         raise SystemExit(f"Not a valid option or argument. Use --help.")
