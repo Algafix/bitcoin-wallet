@@ -1,27 +1,52 @@
+import json
 import os
 from os import path as ospath
 from pathlib import Path
 
 import sys
+
+import requests
+
 from Transaction import TX
 import aux_functions as aux
 
-def new_address():
 
+def new_address():
     sk, pk = aux.generate_keys()
 
     bAddr = aux.generate_btc_addr(pk.to_der(), 'test').decode()
 
     Path("wallet").mkdir(exist_ok=True)
-    Path("wallet/"+bAddr).mkdir(exist_ok=False)
+    Path("wallet/" + bAddr).mkdir(exist_ok=False)
 
     with open("wallet/" + bAddr + '/pk.pem', 'w') as file:
         file.write(pk.to_pem().decode())
 
     with open("wallet/" + bAddr + '/sk.pem', 'w') as file:
         file.write(sk.to_pem().decode())
-    
-    return (bAddr, aux.get_pub_key_hex(pk.to_der()))
+
+    return bAddr, aux.get_pub_key_hex(pk.to_der())
+
+
+def get_balance(addr):
+    url = "https://api.blockcypher.com/v1/btc/test3/addrs/" + addr + "/balance"
+    request = requests.get(url)
+    content = request.json()
+    amount = content['balance']
+
+    amount = float(amount)
+
+    return amount
+
+
+def get_total_balance():
+    amount = 0
+
+    for wallet in os.listdir("wallet/"):
+        amount = amount + get_balance(wallet)
+
+    return amount
+
 
 if __name__ == "__main__":
 
@@ -33,10 +58,14 @@ if __name__ == "__main__":
         print("info: Shows the current addresses and pubkeys.")
 
     elif "new_address" in args:
-        (addr,pubk) = new_address()
+        (addr, pubk) = new_address()
         print("\n-----------------------------")
         print("Created Bitcoin address: \n" + addr + "\n")
         print("With the public key: \n" + pubk)
         print("-----------------------------\n")
+    elif "get_balance" in args:
+
+        print(get_total_balance())
+
     else:
         raise SystemExit(f"Not a valid option or argument. Use --help.")
