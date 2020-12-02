@@ -193,7 +193,7 @@ def get_pub_key_hex(pk_der):
     """
 
     # Get the asn1 representation of the public key DER data.
-    asn1_pk, _ = decoder.decode(str(pk_der))
+    asn1_pk, _ = decoder.decode(pk_der)
 
     # Get the public key as a BitString. The public key corresponds to the second component
     # of the asn1 public key structure.
@@ -204,9 +204,8 @@ def get_pub_key_hex(pk_der):
     for i in range(len(pk_bit)):
         pk_str += str(pk_bit[i])
 
-    # Parse the data to get it in the desired form.
-    pk_hex = '0' + hex(int(pk_str, 2))[2:-1]
-
+    # Parse the data to get it in the desired form. The hex() deletes the first 0 (0000) and adds '0x'
+    pk_hex = '0' + hex(int(pk_str, 2))[2:]
     return pk_hex
 
 
