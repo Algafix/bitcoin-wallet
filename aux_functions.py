@@ -36,8 +36,8 @@ def hash_160(pk):
 
 
 def hash_160_to_btc_address(h160, v):
-    """ Calculates the Bitcoin address of a given RIPEMD-160 hash from
-an elliptic curve public key.
+    """ Calculates the Bitcoin address of a given RIPEMD-160 hash from 
+    an elliptic curve public key.
 
     :param h160: RIPEMD-160 hash.
     :type h160: bytes
@@ -102,9 +102,9 @@ def public_key_to_btc_address(pk, v='main'):
     TESTNET_PUBKEY_HASH = 111
 
     # Choose the proper version depending on the provided 'v'.
-    if v is 'main':
+    if v == 'main':
         v = PUBKEY_HASH
-    elif v is 'test':
+    elif v == 'test':
         v = TESTNET_PUBKEY_HASH
     else:
         raise Exception("Invalid version, use either 'main' or 'test'.")
@@ -118,16 +118,16 @@ def public_key_to_btc_address(pk, v='main'):
 
 
 def generate_btc_addr(pk, v='main'):
-    """ Calculates Bitcoin address associated to a given elliptic curve
-public key and a given network.
+    """ Calculates Bitcoin address associated to a given elliptic curve 
+    public key and a given network.
 
     :param pk: elliptic curve public key (in hexadecimal format).
     :type pk: EC_pub
-    :param v: version (prefix) used to calculate the WIF, it depends on
-the type of network.
+    :param v: version (prefix) used to calculate the WIF, it depends on 
+    the type of network.
     :type v: str
-    :return: The Bitcoin address associated to the given public key and
-network.
+    :return: The Bitcoin address associated to the given public key and 
+    network.
     :rtype: str
     """
 
@@ -140,8 +140,8 @@ network.
 
 
 def generate_keys():
-    """ Gets a new  elliptic curve key pair using the SECP256K1 elliptic
- curve (the one used by Bitcoin).
+    """ Gets a new  elliptic curve key pair using the SECP256K1 elliptic 
+    curve (the one used by Bitcoin).
 
     :return: elliptic curve key pair.
     :rtype: list
@@ -184,8 +184,7 @@ def get_priv_key_hex(sk_file_path):
 
 
 def get_pub_key_hex(pk_der):
-    """ Converts a public key in hexadecimal format from a DER encoded
-public key.
+    """ Converts a public key in hexadecimal format from a DER encoded public key.
 
     :param pk_der: DER encoded public key
     :type pk_der: bytes
@@ -242,37 +241,36 @@ def build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr,
 
     signed_tx = ""
     for i in range(len(src_btc_addr)):
-        pirv_key = DATA + src_btc_addr[i] + "/sk.pem"
-        priv_key_hex = get_priv_key_hex(pirv_key)
+        priv_key = "wallet/" + src_btc_addr[i] + "/sk.pem"
+        priv_key_hex = get_priv_key_hex(priv_key)
         signed_tx = sign(tx.hex, 0, priv_key_hex)
 
     return signed_tx
 
 
-def UAB_gen_and_store_keys():
-    #### IMPLEMENTATION GOES HERE ####
+# def UAB_gen_and_store_keys():
+#     #### IMPLEMENTATION GOES HERE ####
 
-    sk, pk = generate_keys()
+#     sk, pk = generate_keys()
 
-    bAddr = generate_btc_addr(pk.to_der(), 'test')
+#     bAddr = generate_btc_addr(pk.to_der(), 'test')
 
-    mkdir(DATA + bAddr)
+#     mkdir("wallet/" + bAddr)
 
-    with open(DATA + bAddr + '/pk.pem', 'w') as file:
-        file.write(pk.to_pem())
+#     with open("wallet/" + bAddr + '/pk.pem', 'w') as file:
+#         file.write(pk.to_pem())
 
-    with open(DATA + bAddr + '/sk.pem', 'w') as file:
-        file.write(sk.to_pem())
+#     with open("wallet/" + bAddr + '/sk.pem', 'w') as file:
+#         file.write(sk.to_pem())
 
 
 # CUIDADOOO
 if __name__ == '__main__':
-    UAB_gen_and_store_keys()
-    UAB_gen_and_store_keys()
-    UAB_gen_and_store_keys()
+    # UAB_gen_and_store_keys()
+    # UAB_gen_and_store_keys()
+    # UAB_gen_and_store_keys()
 
-    print(os.listdir(DATA))
-    print(DATA)
+    print(os.listdir("wallet/"))
 
     prev_tx_id = ["82f839c581c9d5b2553dab7cd9f1f71c5ec8b258ca6e85307655e902ef7a9a74"]
     prev_out_index = [0]
@@ -331,7 +329,7 @@ def UAB_get_total_balance():
 
     amount = 0
 
-    for wallet in os.listdir(DATA):
+    for wallet in os.listdir("wallet/"):
         amount = amount + UAB_get_balance(wallet)
 
     ##################################
