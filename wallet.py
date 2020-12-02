@@ -6,7 +6,7 @@ import sys
 from Transaction import TX
 import aux_functions as aux
 
-def init():
+def new_address():
 
     sk, pk = aux.generate_keys()
 
@@ -29,15 +29,14 @@ if __name__ == "__main__":
     args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
 
     if "--help" in opts:
-        print("init: Generates a new wallet and a new Bitcoin address.")
         print("new_address: Creates a new Bitcoin address.")
         print("info: Shows the current addresses and pubkeys.")
 
-    elif "init" in args:
-        (addr,pubk) = init()
+    elif "new_address" in args:
+        (addr,pubk) = new_address()
         print("\n-----------------------------")
-        print("Created Bitcoin address: " + addr)
-        print("With the public key: " + pubk)
+        print("Created Bitcoin address: \n" + addr + "\n")
+        print("With the public key: \n" + pubk)
         print("-----------------------------\n")
     else:
         raise SystemExit(f"Not a valid option or argument. Use --help.")
