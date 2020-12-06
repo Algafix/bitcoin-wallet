@@ -21,5 +21,6 @@ sniffio==1.2.0
 toml==0.10.2
 typing-extensions==3.7.4.3
 wrapt==1.12.1
+blockcypher==1.0.90
 
 requests==2.25.0

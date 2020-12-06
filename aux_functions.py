@@ -76,7 +76,7 @@ def btc_address_to_hash_160(btc_addr):
     # Base 58 decode the Bitcoin address.
     decoded_addr = b58decode(btc_addr)
     # Covert the address from bytes to hex.
-    decoded_addr_hex = b2a_hex(decoded_addr)
+    decoded_addr_hex = b2a_hex(decoded_addr).decode('ascii')
     # Obtain the RIPEMD-160 hash by removing the first and four last bytes of the decoded address, corresponding to
     # the network version and the checksum of the address.
     h160 = decoded_addr_hex[2:-8]
@@ -166,7 +166,7 @@ def get_priv_key_hex(sk_file_path):
     # Obtain the private key using an OpenSSL system call.
     cmd = ['openssl', 'ec', '-in', sk_file_path, '-text', '-noout']
 
-    response = check_output(cmd, stderr=STDOUT)
+    response = check_output(cmd, stderr=STDOUT).decode('ascii')
     # Parse the result to remove all the undesired spacing characters.
     raw_key = response[response.find('priv:') + 8:
                        response.find('pub:')]
@@ -217,13 +217,9 @@ def generate_std_scriptpubkey(target_btc_addr):
 
     h160 = btc_address_to_hash_160(target_btc_addr)
 
-    scriptpubkey = format(OP_DUP, 'x') + format(OP_HASH_160, 'x') + format(int(len(h160) / 2), 'x') + h160 + \
-                   format(OP_EQUALVERIFY, 'x') + format(OP_CHECKSIG,
-                                                        'x')
+    scriptpubkey = format(OP_DUP, 'x') + format(OP_HASH_160, 'x') + format(int(len(h160) / 2), 'x') + h160 + format(OP_EQUALVERIFY, 'x') + format(OP_CHECKSIG,'x')
 
-    # scriptpubkey = '{:02x}'.format(OP_DUP) +
-    '{:02x}'.format(OP_HASH_160) + '{:02x}'.format(int(len(h160) / 2)) + h160 + '{:02x}'.format(
-        OP_EQUALVERIFY) + '{:02x}'.format(OP_CHECKSIG)
+    # scriptpubkey = '{:02x}'.format(OP_DUP) +'{:02x}'.format(OP_HASH_160) + '{:02x}'.format(int(len(h160) / 2)) + h160 + '{:02x}'.format(OP_EQUALVERIFY) + '{:02x}'.format(OP_CHECKSIG)
     return scriptpubkey
 
 
@@ -272,6 +268,8 @@ if __name__ == '__main__':
     print(os.listdir("wallet/"))
 
     prev_tx_id = ["82f839c581c9d5b2553dab7cd9f1f71c5ec8b258ca6e85307655e902ef7a9a74"]
+    # "945c12e7b6f5b26eb857d1bcbbd12892a516eee302917372b1347fbcad4f5198"
+    # "9c1d806fa39d5b9ba43b996f73bd397397d1dce47c1f9c542d5fbeef430d00e1"
     prev_out_index = [0]
     value = [110000]
     src_btc_addr = ["mgEVYkAbVgX5Fm9RUSMC2VFa3phDyMXppA"]
@@ -318,11 +316,12 @@ def UAB_get_balance(addr):
     #### IMPLEMENTATION GOES HERE ####
 
     print(UAB_get_balance("mzCNBj4r8BCrh5hwHpFMo5azYw4zqwnJvF"))
+
+
 # EXERCISE 6: Compute total balance of a wallet
 #
 
 def UAB_get_total_balance():
-
     amount = -1
     #### IMPLEMENTATION GOES HERE ####
 

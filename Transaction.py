@@ -2,9 +2,11 @@ def change_endianness(x):
     # If there is an odd number of elements, we make it even by adding a 0
     if (len(x) % 2) == 1:
         x += "0"
-    y = x.decode('hex')
+    #y = x.decode('hex')
+    y = bytes.fromhex(x)
     z = y[::-1]
-    return z.encode('hex')
+
+    return z.hex()
 
 
 def decode_varint(varint):
@@ -17,6 +19,8 @@ def decode_varint(varint):
 
 
 def int2bytes(a, b):
+    a= int(a)
+    b= int(b)
     return ('%0' + str(2 * b) + 'x') % a
 
 
@@ -115,9 +119,14 @@ class TX:
             self.nSequence.append("ffffffff")
 
         n_outputs = len(scriptPubKey)
+        print(n_outputs)
         self.outputs = int2bytes(n_outputs, 1)
+        print(self.outputs)
+        print(n_outputs.to_bytes(1,'big'))
 
         for i in range(n_outputs):
+            print(value[i])
+            #self.value.append(change_endianness(value[i].to_))
             self.value.append(change_endianness(int2bytes(value[i], 8)))
 
             self.scriptPubKey_len.append(int2bytes(len(scriptPubKey[i]) / 2, 1))
