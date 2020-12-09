@@ -119,13 +119,13 @@ class TX:
             self.nSequence.append("ffffffff")
 
         n_outputs = len(scriptPubKey)
-        print(n_outputs)
+        #print(n_outputs)
         self.outputs = int2bytes(n_outputs, 1)
-        print(self.outputs)
-        print(n_outputs.to_bytes(1,'big'))
+        #print(self.outputs)
+        #print(n_outputs.to_bytes(1,'big'))
 
         for i in range(n_outputs):
-            print(value[i])
+            #print(value[i])
             #self.value.append(change_endianness(value[i].to_))
             self.value.append(change_endianness(int2bytes(value[i], 8)))
 

@@ -37,9 +37,11 @@ def get_balance(addr):
     url = "https://api.blockcypher.com/v1/btc/test3/addrs/" + addr + "/balance"
     request = requests.get(url)
     content = request.json()
-    print(content)
+    #print(content)
     amount = content['balance']
     amount = float(amount / (10 ** 8))
+
+    print(content['address'] + '\t' + str(content['balance']))
 
     return amount
 
@@ -89,15 +91,34 @@ if __name__ == "__main__":
         print("With the public key: \n" + pubk)
         print("-----------------------------\n")
     elif "get_balance" in args:
-        print(get_total_balance())
+        total_balance = get_total_balance()
+        print('\n\tTotal balance:\t' + str(total_balance))
+    elif "make_transaction" in args:
+        #WORK IN PROGRESS, PROCEED WITH CAUTION
+
+        #TODO: Decouple printing of addresses and balance from getting total balance
+        #TODO: Store in variable the addresses and balance for an easy menu (select addr 1, 2, 3, etc)
+        get_total_balance()
+
+        s_addr = input("From Address...")
+        d_addr = input("To Address...")
+        tx_value = input("The value of...")
+
+        #TODO: Compare value with balance for the need of and exchange addr
+        (exchange_addr,pubk) = new_address()
+        print("Exchange Address: " + exchange_addr)
+
+        #TODO: Apply automatic fees (difference between sum(inputs)-sum(outputs) are fees)
+
+        # TODO: Get prev_tx_id and prev_out_index with an API (optional improvement: store from previous wallet tx)
+        #new_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
+
     elif "try_tx" in args:
-        prev_tx_id = ["a42eef2be826bac6b2ccdfb664da3df45843dd79726ee10dc74e3444d13f878f"]
-        # "945c12e7b6f5b26eb857d1bcbbd12892a516eee302917372b1347fbcad4f5198"
-        # "9c1d806fa39d5b9ba43b996f73bd397397d1dce47c1f9c542d5fbeef430d00e1"
+        prev_tx_id = ["e1c4c20b1e207121db57d023f0e802fe1bed1fd04c3fb5c5035a53cd0b1c4eb5"]
         prev_out_index = [0]
-        value = [100]
-        src_btc_addr = ["mx2Hw3o1k45aKSquTGd8jcPqr2mCWwWcj7"]
-        dest_btc_addr = ["mjzmGEUbigJSuuGKB1YFotXs5KqLKKgP9A"]
+        value = [100000]
+        src_btc_addr = ["mqRPtLdg1REUZnmHtC4jqJUMnxQzqGYVL3"]
+        dest_btc_addr = ["mwQA3HJ52C4iioe51wJmgE56DXWkTHEoeM"]
 
         signed_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
         print(signed_tx.strip())
