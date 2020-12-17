@@ -41,18 +41,20 @@ def get_balance(addr):
     amount = content['balance']
     amount = float(amount / (10 ** 8))
 
-    print(content['address'] + '\t' + str(content['balance']))
-
     return amount
 
 
-def get_total_balance():
-    amount = 0
+def get_total_balances():
+    
+    balance_list = []
+    total_amount = 0
 
-    for wallet in os.listdir("wallet/"):
-        amount = amount + get_balance(wallet)
+    for address in os.listdir("wallet/"):
+        balance = get_balance(address)
+        balance_list.append([address, balance])
+        total_amount += balance
 
-    return amount
+    return total_amount, balance_list
 
 
 def build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr,
@@ -90,28 +92,58 @@ if __name__ == "__main__":
         print("Created Bitcoin address: \n" + addr + "\n")
         print("With the public key: \n" + pubk)
         print("-----------------------------\n")
+
     elif "get_balance" in args:
-        total_balance = get_total_balance()
-        print('\n\tTotal balance:\t' + str(total_balance))
+        total_balance, address_list = get_total_balances()
+        
+        print("\nAddresses:")
+        for address, balance in address_list:
+            print(f"\t{address}: {balance}")
+
+        print('\nTotal balance:\t' + str(total_balance))
+
     elif "make_transaction" in args:
-        #WORK IN PROGRESS, PROCEED WITH CAUTION
 
-        #TODO: Decouple printing of addresses and balance from getting total balance
-        #TODO: Store in variable the addresses and balance for an easy menu (select addr 1, 2, 3, etc)
-        get_total_balance()
+        _, address_list = get_total_balances()
 
-        s_addr = input("From Address...")
-        d_addr = input("To Address...")
-        tx_value = input("The value of...")
+        print("Addresses:")
+        for index, (address, balance) in enumerate(address_list):
+            print(f"[{index}] {address}: {balance}")
 
-        #TODO: Compare value with balance for the need of and exchange addr
-        (exchange_addr,pubk) = new_address()
-        print("Exchange Address: " + exchange_addr)
+        s_addr_index = int(input("From Address...\n"))
 
-        #TODO: Apply automatic fees (difference between sum(inputs)-sum(outputs) are fees)
+        d_addr_index = input("To Address... (Select or write a new address)\n")
+        if len(d_addr_index) < 34:
+            d_addr = address_list[int(d_addr_index)][0] # 0 is address, 1 is balance (needs to be refactored to obj or dict)
+        else:
+            d_addr = d_addr_index
+        
+        tx_value = float(input("The value of...\n"))
+        if tx_value == address_list[s_addr_index][1]:
+            print(f"You have to pay fees!")
+            exit(1)
+        elif tx_value > address_list[s_addr_index][1]:
+            print(f"You can't transfer more money than the balance of the address!")
+            exit(2)
 
-        # TODO: Get prev_tx_id and prev_out_index with an API (optional improvement: store from previous wallet tx)
+        tx_fees = float(input("How many fees you want to pay? (Enter to compute the fees as the difference)\n") or "0")
+
+        if tx_fees == 0:
+            exchange = False
+            tx_fees = address_list[s_addr_index][1] - tx_value
+        else:
+            exchange = True
+            exchange_value = address_list[s_addr_index][1] - tx_value - tx_fees
+            (exchange_addr,pubk) = new_address()
+            print(f"Exchange Address: {exchange_addr}")
+        
+
+
+        #TODO: Get prev_tx_id and prev_out_index with an API (optional improvement: store from previous wallet tx)
         #new_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
+
+    elif "try_utxo":
+        print("Hello")
 
     elif "try_tx" in args:
         prev_tx_id = ["e1c4c20b1e207121db57d023f0e802fe1bed1fd04c3fb5c5035a53cd0b1c4eb5"]
