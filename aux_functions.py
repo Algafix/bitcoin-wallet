@@ -2,6 +2,7 @@ import os
 from os import mkdir
 from os import path as ospath
 
+
 import json
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 import httplib2

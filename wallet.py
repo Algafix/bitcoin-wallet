@@ -2,23 +2,47 @@ import json
 import os
 from os import path as ospath
 from pathlib import Path
+from mnemonic import Mnemonic
 
 import sys
 
-import requests
+from bip44 import Wallet
 
 import Transaction
 from Transaction import TX
 import aux_functions as aux
-from blockcypher import pushtx
-from blockcypher import simple_spend
-from blockcypher import get_blockchain_overview
-import blockcypher
+from coincurve import PrivateKey, PublicKey
+
+from blockcypher import get_address_overview
+
+##TODO: THIS IS BIP 44
+def prueba():
+    if not os.path.exists("words.txt"):
+        mnemo = Mnemonic("english")
+        words = mnemo.generate(strength=256)
+
+        with open("words.txt", 'w') as f:
+            f.write(words)
+
+        print(words)
+    else:
+        with open("words.txt", 'r') as f:
+            words = f.read()
+    print(words)
+    w = Wallet(words)
+    sk, pk = w.derive_account("TESTNET", account=0, address_index=0)
+    sk = PrivateKey(sk)
+    pk_bytes = bytes.fromhex(pk) if isinstance(pk, str) else pk
+    if len(pk_bytes) != 64:
+        pk_bytes = PublicKey(pk_bytes).format(False)[1:]
+    print(sk.to_der())
+    aux.generate_btc_addr(sk.to_der(),pk, 'test').decode()
+
+    ############################
 
 
 def new_address():
     sk, pk = aux.generate_keys()
-
     bAddr = aux.generate_btc_addr(pk.to_der(), 'test').decode()
 
     Path("wallet").mkdir(exist_ok=True)
@@ -34,11 +58,13 @@ def new_address():
 
 
 def get_balance(addr):
-    url = "https://api.blockcypher.com/v1/btc/test3/addrs/" + addr + "/balance"
-    request = requests.get(url)
-    content = request.json()
+    #url = "https://api.blockcypher.com/v1/btc/test3/addrs/" + addr + "/balance"
+
+    #request = requests.get(url)
+    #content = request.json()
     #print(content)
-    amount = content['balance']
+    #amount = content['balance']
+    amount = get_address_overview(addr,coin_symbol="btc-testnet")['balance']
     amount = float(amount / (10 ** 8))
 
     return amount
@@ -98,9 +124,9 @@ if __name__ == "__main__":
         
         print("\nAddresses:")
         for address, balance in address_list:
-            print(f"\t{address}: {balance}")
+            print(f"\t{address}: {balance} bitcoins")
 
-        print('\nTotal balance:\t' + str(total_balance))
+        print('\nTotal balance:\t' + str(total_balance) + "bitcoins")
 
     elif "make_transaction" in args:
 
@@ -142,25 +168,27 @@ if __name__ == "__main__":
         #TODO: Get prev_tx_id and prev_out_index with an API (optional improvement: store from previous wallet tx)
         #new_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
 
-    elif "try_utxo":
+    elif "try_utxo" in args:
         print("Hello")
 
-    elif "try_tx" in args:
-        prev_tx_id = ["e1c4c20b1e207121db57d023f0e802fe1bed1fd04c3fb5c5035a53cd0b1c4eb5"]
-        prev_out_index = [0]
-        value = [100000]
-        src_btc_addr = ["mqRPtLdg1REUZnmHtC4jqJUMnxQzqGYVL3"]
-        dest_btc_addr = ["mwQA3HJ52C4iioe51wJmgE56DXWkTHEoeM"]
+    #elif "try_tx" in args:
+    #    prev_tx_id = ["e1c4c20b1e207121db57d023f0e802fe1bed1fd04c3fb5c5035a53cd0b1c4eb5"]
+    #    prev_out_index = [0]
+    #    value = [100000]
+    #    src_btc_addr = ["mqRPtLdg1REUZnmHtC4jqJUMnxQzqGYVL3"]
+    #    dest_btc_addr = ["mwQA3HJ52C4iioe51wJmgE56DXWkTHEoeM"]
 
-        signed_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
-        print(signed_tx.strip())
-        t = pushtx(tx_hex=signed_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
-        print(t)
+    #    signed_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
+    #    print(signed_tx.strip())
+    #    t = pushtx(tx_hex=signed_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
+    #    print(t)
 
-        #priv_key = "wallet/mjzmGEUbigJSuuGKB1YFotXs5KqLKKgP9A/sk.pem"
-        #priv_key_hex = aux.get_priv_key_hex(priv_key)
-        #simple_spend(from_privkey=priv_key_hex, to_address='mx2Hw3o1k45aKSquTGd8jcPqr2mCWwWcj7', to_satoshis=100000, api_key="c042531962c741879044c11c11b042a2")
-        #print(t)
+        # priv_key = "wallet/mjzmGEUbigJSuuGKB1YFotXs5KqLKKgP9A/sk.pem"
+        # priv_key_hex = aux.get_priv_key_hex(priv_key)
+        # simple_spend(from_privkey=priv_key_hex, to_address='mx2Hw3o1k45aKSquTGd8jcPqr2mCWwWcj7', to_satoshis=100000, api_key="c042531962c741879044c11c11b042a2")
+        # print(t)
 
+    #elif "prueba" in args:
+    #    prueba()
     else:
         raise SystemExit(f"Not a valid option or argument. Use --help.")
