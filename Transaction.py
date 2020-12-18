@@ -107,8 +107,7 @@ class TX:
 
         for i in range(n_inputs):
             self.prev_tx_id.append(change_endianness(prev_tx_id[i]))
-
-        self.prev_out_index.append(change_endianness(int2bytes(prev_out_index[i], 4)))
+            self.prev_out_index.append(change_endianness(int2bytes(prev_out_index[i], 4)))
 
         for i in range(n_inputs):
             if scriptSig is None:

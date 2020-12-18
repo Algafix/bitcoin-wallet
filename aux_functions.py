@@ -225,7 +225,7 @@ def generate_std_scriptpubkey(target_btc_addr):
 
 def build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr,
                  dest_btc_addr):
-    assert len(prev_tx_id) == len(prev_out_index) == len(value) == len(src_btc_addr)
+    #assert len(prev_tx_id) == len(prev_out_index) == len(value) == len(src_btc_addr)
 
     scriptPubKey = []
     for i in range(len(dest_btc_addr)):

@@ -12,7 +12,7 @@ from Transaction import TX
 import aux_functions as aux
 from blockcypher import pushtx
 from blockcypher import simple_spend
-from blockcypher import get_blockchain_overview
+from blockcypher import get_address_details
 import blockcypher
 
 
@@ -39,7 +39,6 @@ def get_balance(addr):
     content = request.json()
     #print(content)
     amount = content['balance']
-    amount = float(amount / (10 ** 8))
 
     return amount
 
@@ -59,7 +58,7 @@ def get_total_balances():
 
 def build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr,
                  dest_btc_addr):
-    assert len(prev_tx_id) == len(prev_out_index) == len(value) == len(src_btc_addr)
+    #assert len(prev_tx_id) == len(prev_out_index) == len(value) == len(src_btc_addr)
 
     scriptPubKey = []
     for i in range(len(dest_btc_addr)):
@@ -110,40 +109,62 @@ if __name__ == "__main__":
         for index, (address, balance) in enumerate(address_list):
             print(f"[{index}] {address}: {balance}")
 
+        # Source Address
         s_addr_index = int(input("From Address...\n"))
+        s_addr = address_list[s_addr_index][0]
+        s_addr_balance = address_list[s_addr_index][1]
 
+        # Destination Address
         d_addr_index = input("To Address... (Select or write a new address)\n")
         if len(d_addr_index) < 34:
-            d_addr = address_list[int(d_addr_index)][0] # 0 is address, 1 is balance (needs to be refactored to obj or dict)
+            d_addr = address_list[int(d_addr_index)][0] # 0 is address, 1 is balance
         else:
             d_addr = d_addr_index
         
-        tx_value = float(input("The value of...\n"))
-        if tx_value == address_list[s_addr_index][1]:
+        # Transaction Value
+        tx_value = int(input("The value of...\n"))
+        if tx_value == s_addr_balance:
             print(f"You have to pay fees!")
             exit(1)
-        elif tx_value > address_list[s_addr_index][1]:
+        elif tx_value > s_addr_balance:
             print(f"You can't transfer more money than the balance of the address!")
             exit(2)
-
-        tx_fees = float(input("How many fees you want to pay? (Enter to compute the fees as the difference)\n") or "0")
-
+        
+        # Transaction Fees and Exchange
+        tx_fees = int(input("How many fees you want to pay? (Enter to compute the fees as the difference)\n") or "0")
         if tx_fees == 0:
             exchange = False
-            tx_fees = address_list[s_addr_index][1] - tx_value
+            tx_fees = s_addr_balance - tx_value
         else:
             exchange = True
-            exchange_value = address_list[s_addr_index][1] - tx_value - tx_fees
+            tx_exchange = s_addr_balance - tx_value - tx_fees
+            print(f"Exchange value: {tx_exchange}")
             (exchange_addr,pubk) = new_address()
             print(f"Exchange Address: {exchange_addr}")
         
+        # Get UTXOs
+        addr_details = get_address_details(s_addr, coin_symbol="btc-testnet", unspent_only=True)
+        utxos = addr_details["txrefs"]
 
+        #TODO: Now harcoded to the first UTXO (aka only works if UTXO[0] < tx_value + fees)
+        #       Fix by iterating through UTXO's and accumulating balance until having a value
+        #       bigger than tx_value + fees (if any). Then idk how to incorporate that to the
+        #       build_raw_tx. Maybe prev_tx_hash = [tx1,tx2,...] and prev_tx_output = [tx1_output, tx2_output,...]
+        if int(utxos[0]["value"]) < (tx_value + tx_fees):
+            print(f"Not yet implemented! Only works if the first UTXO is bigger than value plus fees.")
+            print(utxos)
+            exit(3)
+        else:
+            prev_tx_hash = utxos[0]["tx_hash"]
+            prev_tx_output = utxos[0]["tx_output_n"]
+            new_tx = build_raw_tx([prev_tx_hash], [prev_tx_output], [tx_value, tx_exchange], [s_addr], [d_addr, exchange_addr])
+            t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
+            print(f'Transaction ID: {t["t"]["hash"]}')
 
-        #TODO: Get prev_tx_id and prev_out_index with an API (optional improvement: store from previous wallet tx)
-        #new_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
-
-    elif "try_utxo":
-        print("Hello")
+    elif "try_utxo" in args:
+        addr_details = get_address_details("YOUR-ADDRESS-HERE", coin_symbol="btc-testnet", unspent_only=True)
+        utxos = addr_details["txrefs"]
+        print(utxos)
 
     elif "try_tx" in args:
         prev_tx_id = ["e1c4c20b1e207121db57d023f0e802fe1bed1fd04c3fb5c5035a53cd0b1c4eb5"]
