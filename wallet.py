@@ -101,12 +101,12 @@ def build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr,
     tx = Transaction.TX()
     tx.build_default_tx(prev_tx_id, prev_out_index, value, scriptPubKey)
 
-    signed_tx = ""
-    for i in range(len(src_btc_addr)):
-        priv_key = "wallet/" + src_btc_addr[i] + "/sk.pem"
+    signed_tx = tx.hex
+    for i in range(len(prev_tx_id)):
+        priv_key = "wallet/" + src_btc_addr + "/sk.pem"
         priv_key_hex = aux.get_priv_key_hex(priv_key)
 
-        signed_tx = sign(tx.hex, 0, priv_key_hex)
+        signed_tx = sign(signed_tx, i, priv_key_hex)
 
     return signed_tx
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         
         # Transaction Fees and Exchange
         tx_fees = int(input("How many fees you want to pay? (Enter to compute the fees as the difference)\n") or "0")
-        if tx_fees == 0:
+        if tx_fees == 0 or (tx_fees + tx_value) == s_addr_balance:
             exchange = False
             tx_fees = s_addr_balance - tx_value
         else:
@@ -181,38 +181,29 @@ if __name__ == "__main__":
         addr_details = get_address_details(s_addr, coin_symbol="btc-testnet", unspent_only=True)
         utxos = addr_details["txrefs"]
 
-        #TODO: Now harcoded to the first UTXO (aka only works if UTXO[0] < tx_value + fees)
-        #       Fix by iterating through UTXO's and accumulating balance until having a value
-        #       bigger than tx_value + fees (if any). Then idk how to incorporate that to the
-        #       build_raw_tx. Maybe prev_tx_hash = [tx1,tx2,...] and prev_tx_output = [tx1_output, tx2_output,...]
+        prev_tx_list = []
+        prev_tx_output_list = []
+        tx_value_list = [tx_value]
+        d_addr_list = [d_addr]
 
-        #amount = tx_fees
-        #prev_tx_hash = list()
-        #prev_tx_output = list()
+        for utxo in utxos:
+            prev_tx_list.append(utxo["tx_hash"])
+            prev_tx_output_list.append(utxo["tx_output_n"])
+        
+        if exchange:
+            tx_value_list.append(tx_exchange)
+            d_addr_list.append(exchange_addr)
 
-        #for utxo in utxos:
-        #    amount += tx_value
-        #    print(utxo['tx_output_n'])
-        #    prev_tx_hash.append(utxo["tx_hash"][0])
-        #    prev_tx_output.append(utxo["tx_output_n"])
-        #    if utxo["value"] >= amount:
-        #        break
-        # new_tx = build_raw_tx(prev_tx_hash, prev_tx_output, [tx_value, tx_exchange], [s_addr], [d_addr, exchange_addr])
-        #t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
-
-        if int(utxos[0]["value"]) < (tx_value + tx_fees):
-            print(f"Not yet implemented! Only works if the first UTXO is bigger than value plus fees.")
-            print(utxos)
-            exit(3)
-        else:
-            prev_tx_hash = utxos[0]["tx_hash"]
-            prev_tx_output = utxos[0]["tx_output_n"]
-        new_tx = build_raw_tx([prev_tx_hash], [prev_tx_output], [tx_value, tx_exchange], [s_addr], [d_addr, exchange_addr])
+        new_tx = build_raw_tx(prev_tx_list, prev_tx_output_list, tx_value_list, s_addr, d_addr_list)
         t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
-        print(f'Transaction ID: {t["tx"]["hash"]}')
+
+        if "error" in t:
+            print(t)
+        else:
+            print(f'Transaction ID:\n{t["tx"]["hash"]}')
 
     elif "try_utxo" in args:
-        addr_details = get_address_details("YOUR-ADDRESS-HERE", coin_symbol="btc-testnet", unspent_only=True)
+        addr_details = get_address_details("mqa4rqExcA7GY8ZqGhpXted6UQNJnpGA2B", coin_symbol="btc-testnet", unspent_only=True)
         utxos = addr_details["txrefs"]
         print(utxos)
 
