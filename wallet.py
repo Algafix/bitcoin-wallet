@@ -118,7 +118,8 @@ if __name__ == "__main__":
 
     if "--help" in opts:
         print("new_address: Creates a new Bitcoin address.")
-        print("info: Shows the current addresses and pubkeys.")
+        print("get_balance: Print the current keys and balances.")
+        print("make_transaction: Perform a transaction.")
 
     elif "new_address" in args:
         (addr, pubk) = new_address()
@@ -194,6 +195,7 @@ if __name__ == "__main__":
             tx_value_list.append(tx_exchange)
             d_addr_list.append(exchange_addr)
 
+        # Creates the transaction
         new_tx = build_raw_tx(prev_tx_list, prev_tx_output_list, tx_value_list, s_addr, d_addr_list)
         t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
 
