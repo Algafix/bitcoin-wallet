@@ -8,6 +8,8 @@ from mnemonic import Mnemonic
 from bip44 import Wallet
 
 import Transaction
+from bitcoin import sign
+
 from Transaction import TX
 import aux_functions as aux
 
@@ -43,7 +45,7 @@ def prueba():
     print(sk.to_der())
     #aux.generate_btc_addr(sk.to_der(),pk, 'test').decode()
 
-    ############################
+############################
 
 
 def new_address():
@@ -70,6 +72,7 @@ def get_balance(addr):
     #print(content)
     #amount = content['balance']
     amount = get_address_overview(addr,coin_symbol="btc-testnet")['balance']
+
 
     return amount
 
@@ -102,7 +105,8 @@ def build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr,
     for i in range(len(src_btc_addr)):
         priv_key = "wallet/" + src_btc_addr[i] + "/sk.pem"
         priv_key_hex = aux.get_priv_key_hex(priv_key)
-        signed_tx = aux.sign(tx.hex, 0, priv_key_hex)
+
+        signed_tx = sign(tx.hex, 0, priv_key_hex)
 
     return signed_tx
 
@@ -181,6 +185,21 @@ if __name__ == "__main__":
         #       Fix by iterating through UTXO's and accumulating balance until having a value
         #       bigger than tx_value + fees (if any). Then idk how to incorporate that to the
         #       build_raw_tx. Maybe prev_tx_hash = [tx1,tx2,...] and prev_tx_output = [tx1_output, tx2_output,...]
+
+        #amount = tx_fees
+        #prev_tx_hash = list()
+        #prev_tx_output = list()
+
+        #for utxo in utxos:
+        #    amount += tx_value
+        #    print(utxo['tx_output_n'])
+        #    prev_tx_hash.append(utxo["tx_hash"][0])
+        #    prev_tx_output.append(utxo["tx_output_n"])
+        #    if utxo["value"] >= amount:
+        #        break
+        # new_tx = build_raw_tx(prev_tx_hash, prev_tx_output, [tx_value, tx_exchange], [s_addr], [d_addr, exchange_addr])
+        #t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
+
         if int(utxos[0]["value"]) < (tx_value + tx_fees):
             print(f"Not yet implemented! Only works if the first UTXO is bigger than value plus fees.")
             print(utxos)
@@ -188,9 +207,9 @@ if __name__ == "__main__":
         else:
             prev_tx_hash = utxos[0]["tx_hash"]
             prev_tx_output = utxos[0]["tx_output_n"]
-            new_tx = build_raw_tx([prev_tx_hash], [prev_tx_output], [tx_value, tx_exchange], [s_addr], [d_addr, exchange_addr])
-            t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
-            print(f'Transaction ID: {t["tx"]["hash"]}')
+        new_tx = build_raw_tx([prev_tx_hash], [prev_tx_output], [tx_value, tx_exchange], [s_addr], [d_addr, exchange_addr])
+        t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
+        print(f'Transaction ID: {t["tx"]["hash"]}')
 
     elif "try_utxo" in args:
         addr_details = get_address_details("YOUR-ADDRESS-HERE", coin_symbol="btc-testnet", unspent_only=True)
