@@ -1,23 +1,24 @@
 import json
 import os
+import sys
+
 from os import path as ospath
 from pathlib import Path
 from mnemonic import Mnemonic
-
-import sys
-
 from bip44 import Wallet
 
 import Transaction
 from Transaction import TX
 import aux_functions as aux
-from blockcypher import pushtx
-from blockcypher import simple_spend
-from blockcypher import get_address_details
+
 import blockcypher
+from blockcypher import pushtx
+from blockcypher import get_address_details
+from blockcypher import get_address_overview
+
 from coincurve import PrivateKey, PublicKey
 
-from blockcypher import get_address_overview
+
 
 ##TODO: THIS IS BIP 44
 def prueba():
@@ -40,7 +41,7 @@ def prueba():
     if len(pk_bytes) != 64:
         pk_bytes = PublicKey(pk_bytes).format(False)[1:]
     print(sk.to_der())
-    aux.generate_btc_addr(sk.to_der(),pk, 'test').decode()
+    #aux.generate_btc_addr(sk.to_der(),pk, 'test').decode()
 
     ############################
 
@@ -127,9 +128,9 @@ if __name__ == "__main__":
         
         print("\nAddresses:")
         for address, balance in address_list:
-            print(f"\t{address}: {balance} bitcoins")
+            print(f"\t{address}: {balance} satoshis")
 
-        print('\nTotal balance:\t' + str(total_balance) + "bitcoins")
+        print(f'\nTotal balance:\t {total_balance} satoshis')
 
     elif "make_transaction" in args:
 
@@ -189,31 +190,12 @@ if __name__ == "__main__":
             prev_tx_output = utxos[0]["tx_output_n"]
             new_tx = build_raw_tx([prev_tx_hash], [prev_tx_output], [tx_value, tx_exchange], [s_addr], [d_addr, exchange_addr])
             t = pushtx(tx_hex=new_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
-            print(f'Transaction ID: {t["t"]["hash"]}')
+            print(f'Transaction ID: {t["tx"]["hash"]}')
 
     elif "try_utxo" in args:
         addr_details = get_address_details("YOUR-ADDRESS-HERE", coin_symbol="btc-testnet", unspent_only=True)
         utxos = addr_details["txrefs"]
         print(utxos)
 
-    #elif "try_tx" in args:
-    #    prev_tx_id = ["e1c4c20b1e207121db57d023f0e802fe1bed1fd04c3fb5c5035a53cd0b1c4eb5"]
-    #    prev_out_index = [0]
-    #    value = [100000]
-    #    src_btc_addr = ["mqRPtLdg1REUZnmHtC4jqJUMnxQzqGYVL3"]
-    #    dest_btc_addr = ["mwQA3HJ52C4iioe51wJmgE56DXWkTHEoeM"]
-
-    #    signed_tx = build_raw_tx(prev_tx_id, prev_out_index, value, src_btc_addr, dest_btc_addr)
-    #    print(signed_tx.strip())
-    #    t = pushtx(tx_hex=signed_tx.strip(), coin_symbol="btc-testnet", api_key="c042531962c741879044c11c11b042a2")
-    #    print(t)
-
-        # priv_key = "wallet/mjzmGEUbigJSuuGKB1YFotXs5KqLKKgP9A/sk.pem"
-        # priv_key_hex = aux.get_priv_key_hex(priv_key)
-        # simple_spend(from_privkey=priv_key_hex, to_address='mx2Hw3o1k45aKSquTGd8jcPqr2mCWwWcj7', to_satoshis=100000, api_key="c042531962c741879044c11c11b042a2")
-        # print(t)
-
-    #elif "prueba" in args:
-    #    prueba()
     else:
         raise SystemExit(f"Not a valid option or argument. Use --help.")
